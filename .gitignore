@@ -1,0 +1,9 @@
+.env
+.DS_Store
+__pycache__/
+.cache/
+.idea/
+.claude/worktrees/
+# Los textos y los audios de prueba son privados: solo viven en este ordenador y en Supabase.
+meditaciones/
+escucha/

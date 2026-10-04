@@ -1,0 +1,117 @@
+:root {
+  --fondo: #faf8f3;
+  --panel: #f1ede4;
+  --panel-activo: #e2eee5;
+  --reproductor: #ffffff;
+  --texto: #3d4a46;
+  --tenue: #7f8c86;
+  --acento: #b5d8c1;
+  --acento-texto: #5a8a70;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { margin: 0; background: var(--fondo); }
+
+body {
+  color: var(--texto);
+  font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100dvh;
+  padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+}
+
+body.con-reproductor { padding-bottom: calc(env(safe-area-inset-bottom) + 250px); }
+
+[hidden] { display: none !important; }
+
+main { max-width: 560px; margin: 0 auto; }
+
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+
+h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+
+.lema { color: var(--tenue); font-size: 14px; margin: 0; }
+
+#estado { color: var(--tenue); font-size: 14px; margin: 12px 0 16px; min-height: 1.45em; }
+
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+
+#salir {
+  background: var(--panel);
+  color: var(--tenue);
+  border-radius: 999px;
+  padding: 0 16px;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+#acceso { display: grid; gap: 14px; }
+#acceso label { display: grid; gap: 6px; color: var(--tenue); font-size: 14px; }
+#acceso input {
+  font: inherit;
+  color: var(--texto);
+  background: var(--panel);
+  border: 1px solid var(--panel-activo);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 48px;
+  width: 100%;
+}
+#acceso input:focus { outline: 2px solid var(--acento-texto); outline-offset: 0; }
+#entrar {
+  background: var(--acento);
+  color: var(--texto);
+  font-weight: 600;
+  border-radius: 12px;
+  min-height: 48px;
+  margin-top: 6px;
+}
+#entrar:disabled { opacity: 0.6; }
+
+#lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.meditacion {
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: grid;
+  gap: 4px;
+}
+.meditacion[aria-current="true"] { background: var(--panel-activo); outline: 1px solid var(--acento-texto); }
+.meditacion strong { font-weight: 600; font-size: 18px; }
+.meditacion span { color: var(--tenue); font-size: 15px; }
+.meditacion small { color: var(--acento-texto); font-size: 13px; }
+
+#reproductor {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--reproductor);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(env(safe-area-inset-bottom) + 20px);
+  box-shadow: 0 -8px 32px rgba(61, 74, 70, 0.12);
+}
+#reproductor > * { max-width: 520px; margin-left: auto; margin-right: auto; }
+
+#titulo-actual { font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; text-align: center; }
+
+#progreso { display: block; width: 100%; accent-color: var(--acento-texto); height: 28px; }
+
+.tiempos {
+  display: flex;
+  justify-content: space-between;
+  color: var(--tenue);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.controles { display: flex; justify-content: center; align-items: center; gap: 28px; margin-top: 8px; }
+.controles button {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: var(--panel-activo);
+  font-size: 17px;
+}
+.controles .principal { width: 80px; height: 80px; background: var(--acento); color: var(--texto); font-size: 28px; }
