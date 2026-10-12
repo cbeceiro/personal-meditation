@@ -56,7 +56,8 @@ La voz se genera párrafo a párrafo y se guarda en `.cache/`, así que al retoc
 - **Párrafos**: separados por una línea en blanco; entre dos párrafos seguidos hay 2 s de silencio.
 - **`[pausa N]`**: en una línea propia, N segundos de silencio (el fondo sigue sonando).
 - **Etiquetas de estilo**: `[softly]`, `[whispering]`, etc. Las interpreta el modelo de voz.
-- **El título no se narra.** El fondo empieza 6 s antes que la voz y se apaga 12 s después.
+- **Final**: todas las meditaciones acaban igual. Tras el último párrafo de la meditación suenan 4 minutos de solo fondo y después 1 minuto de cierre: la voz del cierre y el fondo, que se apaga al final. El cierre es el último párrafo del texto; si quieres que tenga varios, pon `[cierre]` en una línea propia delante del primero. Su voz, con sus pausas, tiene que acabar 12 s antes de que termine el cierre (48 s si dura 1 minuto).
+- **El título no se narra.** El fondo empieza 6 s antes que la voz.
 
 ### Cabecera
 
@@ -67,6 +68,8 @@ La voz se genera párrafo a párrafo y se guarda en `.cache/`, así que al retoc
 | `fondo` | Descripción del sonido de fondo, en inglés. `ninguno` o vacío para dejar solo la voz. |
 | `fondo_tipo` | `musica` (por defecto: 3 min de música instrumental en bucle) o `ambiente` (30 s de sonido en bucle: lluvia, olas…). |
 | `volumen_fondo` | De 0 a 1; por defecto 0.2. |
+| `silencio` | Segundos de solo fondo antes del cierre; por defecto 240. |
+| `cierre` | Segundos que dura el cierre; por defecto 60. Si es largo, puede llevar varios párrafos y pausas tras `[cierre]`. |
 
 ## Borrar una meditación
 

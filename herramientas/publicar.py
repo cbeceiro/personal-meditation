@@ -33,12 +33,15 @@ KBPS_FINAL = 96  # del audio mezclado que se publica
 MODELO = "eleven_v4"  # entiende etiquetas de estilo en el texto, como [whispering]; no tiene control de velocidad
 PAUSA = 2.0  # segundos de silencio entre párrafos seguidos; las pausas largas se marcan con [pausa N]
 ENTRADA = 6  # segundos de fondo antes de que empiece la voz
-SALIDA = 12  # segundos de fondo después de la voz, apagándose
+SILENCIO = 240  # segundos de solo fondo entre el final de la meditación y el cierre, salvo que la cabecera diga otra cosa
+CIERRE = 60  # segundos que dura el cierre (su voz y después el fondo hasta apagarse), salvo que la cabecera diga otra cosa
+SALIDA = 12  # segundos finales del cierre en los que el fondo se apaga
 VOLUMEN_FONDO = 0.2
 MUSICA_S = 180  # duración de la música que se pide; después se repite en bucle
 AMBIENTE_S = 30  # lo máximo que genera de una vez el modelo de efectos de sonido
 
 MARCA_PAUSA = r"\[pausa\s+(\d+(?:[.,]\d+)?)\]"
+MARCA_CIERRE = r"\[cierre\]"
 
 
 def leer_meditacion(ruta):
@@ -62,22 +65,40 @@ def leer_meditacion(ruta):
         "fondo": "" if fondo.lower() == "ninguno" else fondo,
         "fondo_tipo": tipo,
         "volumen_fondo": float(meta.get("volumen_fondo", VOLUMEN_FONDO)),
+        "silencio": int(meta.get("silencio", SILENCIO)),
+        "cierre": int(meta.get("cierre", CIERRE)),
         "texto": crudo.strip(),
     }
 
 
-def trozos_de(texto):
-    """Párrafos (str) y pausas marcadas con [pausa N] (float, en segundos), en orden."""
-    texto = re.sub(rf"^[ \t]*{MARCA_PAUSA}[ \t]*$", r"\n\n\g<0>\n\n", texto, flags=re.M | re.I)
-    trozos = []
+def trozos_de(texto, silencio):
+    """Párrafos (str) y pausas (float, en segundos) de la meditación y de su cierre, en orden.
+
+    El cierre es lo que sigue a [cierre] o, si no se marca, el último párrafo. La meditación
+    acaba siempre con `silencio` segundos de solo fondo, que sustituyen a la pausa que hubiera ahí.
+    """
+    marcas = rf"^[ \t]*(?:{MARCA_PAUSA}|{MARCA_CIERRE})[ \t]*$"
+    texto = re.sub(marcas, r"\n\n\g<0>\n\n", texto, flags=re.M | re.I)
+    trozos, corte = [], None
     for bloque in re.split(r"\n\s*\n", texto):
         bloque = bloque.strip()
         pausa = re.fullmatch(MARCA_PAUSA, bloque, re.I)
-        if pausa:
+        if re.fullmatch(MARCA_CIERRE, bloque, re.I):
+            corte = len(trozos)
+        elif pausa:
             trozos.append(float(pausa.group(1).replace(",", ".")))
         elif bloque:
             trozos.append(bloque)
-    return trozos
+    if corte is None:
+        corte = max((i for i, t in enumerate(trozos) if isinstance(t, str)), default=0)
+    cuerpo, cierre = trozos[:corte], trozos[corte:]
+    while cuerpo and not isinstance(cuerpo[-1], str):
+        cuerpo.pop()
+    while cierre and not isinstance(cierre[0], str):
+        cierre.pop(0)
+    if not cierre:
+        sys.exit("Falta el texto del cierre: el último párrafo, o lo que siga a [cierre].")
+    return cuerpo + [float(silencio)], cierre
 
 
 MARCO = 144 * KBPS * 1000 // HZ  # bytes por marco MP3
@@ -124,14 +145,17 @@ def huella_de(*partes, largo=20):
     return hashlib.sha256("|".join(map(str, partes)).encode()).hexdigest()[:largo]
 
 
-def voz_elevenlabs(texto, voz, modelo, forzar=False):
+def voz_elevenlabs(m, voz, modelo, forzar=False):
     # Cada párrafo se genera por separado y se une con silencio: el modelo por sí solo
     # apenas hace pausa en los puntos y aparte, y así solo se paga por los párrafos que cambian.
-    trozos = trozos_de(texto)
+    cuerpo, cierre = trozos_de(m["texto"], m["silencio"])
+    trozos = cuerpo + cierre
     parrafos = [t for t in trozos if isinstance(t, str)]
     (CACHE / "voz").mkdir(parents=True, exist_ok=True)
     audio, i, nuevos, tras_parrafo = b"", 0, 0, False
-    for trozo in trozos:
+    for n, trozo in enumerate(trozos):
+        if n == len(cuerpo):
+            inicio_cierre = len(audio)
         if not isinstance(trozo, str):
             audio += silencio(trozo)
             tras_parrafo = False
@@ -140,24 +164,28 @@ def voz_elevenlabs(texto, voz, modelo, forzar=False):
             audio += silencio(PAUSA)
         guardado = CACHE / "voz" / f"{huella_de(voz, modelo, trozo)}.mp3"
         if not guardado.exists() or forzar:
-            cuerpo = {
+            peticion = {
                 "text": trozo,
                 "model_id": modelo,
                 "voice_settings": {"stability": 0.6, "similarity_boost": 0.8},
             }
             # El contexto de los párrafos vecinos mantiene la entonación entre peticiones.
             if i > 0:
-                cuerpo["previous_text"] = "\n\n".join(parrafos[max(0, i - 3):i])[-500:]
+                peticion["previous_text"] = "\n\n".join(parrafos[max(0, i - 3):i])[-500:]
             if i < len(parrafos) - 1:
-                cuerpo["next_text"] = "\n\n".join(parrafos[i + 1:i + 4])[:500]
-            guardado.write_bytes(solo_audio(pedir_elevenlabs(f"text-to-speech/{voz}", cuerpo)))
+                peticion["next_text"] = "\n\n".join(parrafos[i + 1:i + 4])[:500]
+            guardado.write_bytes(solo_audio(pedir_elevenlabs(f"text-to-speech/{voz}", peticion)))
             nuevos += 1
             print(f"\r    párrafo {i + 1}/{len(parrafos)}", end="", flush=True)
         audio += guardado.read_bytes()
         tras_parrafo = True
         i += 1
     print(f"\r    {nuevos} párrafos generados, {len(parrafos) - nuevos} reutilizados")
-    return audio
+    # El cierre dura siempre lo mismo: lo que no ocupa la voz lo llena el fondo.
+    voz_cierre = (len(audio) - inicio_cierre) * 8 / (KBPS * 1000)
+    if voz_cierre > m["cierre"] - SALIDA:
+        sys.exit(f"La voz del cierre dura {voz_cierre:.0f} s y no puede pasar de {m['cierre'] - SALIDA} s: acórtala.")
+    return audio + silencio(m["cierre"] - voz_cierre)
 
 
 def ffmpeg(*args):
@@ -205,7 +233,7 @@ def mezclar(voz, bucle, volumen):
         entrada.write_bytes(voz)
         codificar = ["-ar", str(HZ), "-b:a", f"{KBPS_FINAL}k", "-write_xing", "1"]
         if bucle:
-            duracion += ENTRADA + SALIDA
+            duracion += ENTRADA
             estereo = "aformat=sample_rates=44100:channel_layouts=stereo"
             ffmpeg(
                 "-i", str(entrada), "-stream_loop", "-1", "-i", str(bucle),
@@ -227,7 +255,7 @@ def ajustes_de_voz():
 
 def producir(m, forzar):
     print(f"  generando     {m['usuario']}/{m['slug']}…")
-    voz = voz_elevenlabs(m["texto"], *ajustes_de_voz(), forzar)
+    voz = voz_elevenlabs(m, *ajustes_de_voz(), forzar)
     bucle = bucle_de_fondo(m, forzar) if m["fondo"] else None
     return mezclar(voz, bucle, m["volumen_fondo"])
 
@@ -256,7 +284,7 @@ def publicar(meditaciones, forzar):
         nombre, id_usuario = f"{m['usuario']}/{m['slug']}", ids[m["usuario"]]
         # La huella incluye todo lo que cambia el audio: tocar cualquier ajuste lo regenera.
         huella = huella_de(
-            *ajustes_de_voz(), PAUSA, ENTRADA, SALIDA, KBPS_FINAL,
+            *ajustes_de_voz(), PAUSA, ENTRADA, m["silencio"], m["cierre"], SALIDA, KBPS_FINAL,
             m["fondo_tipo"], m["fondo"], m["volumen_fondo"], m["texto"], largo=12,
         )
         datos = {"titulo": m["titulo"], "descripcion": m["descripcion"], "orden": m["orden"]}
