@@ -1,4 +1,4 @@
-const SHELL = 'shell-v1';
+const SHELL = 'shell-v2';
 const FICHEROS = [
   './', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.webmanifest',
   'icons/icon-180.png', 'icons/icon-512.png',

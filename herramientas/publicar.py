@@ -146,6 +146,7 @@ def huella_de(*partes, largo=20):
 
 
 def voz_elevenlabs(m, voz, modelo, forzar=False):
+    """Devuelve la voz y los segundos, contados desde su inicio, en que empiezan el silencio final y el cierre."""
     # Cada párrafo se genera por separado y se une con silencio: el modelo por sí solo
     # apenas hace pausa en los puntos y aparte, y así solo se paga por los párrafos que cambian.
     cuerpo, cierre = trozos_de(m["texto"], m["silencio"])
@@ -154,6 +155,8 @@ def voz_elevenlabs(m, voz, modelo, forzar=False):
     (CACHE / "voz").mkdir(parents=True, exist_ok=True)
     audio, i, nuevos, tras_parrafo = b"", 0, 0, False
     for n, trozo in enumerate(trozos):
+        if n == len(cuerpo) - 1:
+            inicio_silencio = len(audio)
         if n == len(cuerpo):
             inicio_cierre = len(audio)
         if not isinstance(trozo, str):
@@ -182,10 +185,12 @@ def voz_elevenlabs(m, voz, modelo, forzar=False):
         i += 1
     print(f"\r    {nuevos} párrafos generados, {len(parrafos) - nuevos} reutilizados")
     # El cierre dura siempre lo mismo: lo que no ocupa la voz lo llena el fondo.
-    voz_cierre = (len(audio) - inicio_cierre) * 8 / (KBPS * 1000)
+    segundos = lambda n_bytes: n_bytes * 8 / (KBPS * 1000)
+    voz_cierre = segundos(len(audio) - inicio_cierre)
     if voz_cierre > m["cierre"] - SALIDA:
         sys.exit(f"La voz del cierre dura {voz_cierre:.0f} s y no puede pasar de {m['cierre'] - SALIDA} s: acórtala.")
-    return audio + silencio(m["cierre"] - voz_cierre)
+    marcas = {"silencio": segundos(inicio_silencio), "cierre": segundos(inicio_cierre)}
+    return audio + silencio(m["cierre"] - voz_cierre), marcas
 
 
 def ffmpeg(*args):
@@ -254,16 +259,19 @@ def ajustes_de_voz():
 
 
 def producir(m, forzar):
+    """Devuelve el MP3, su duración y las marcas de sus tramos (en segundos), que la app usa para el anillo de progreso."""
     print(f"  generando     {m['usuario']}/{m['slug']}…")
-    voz = voz_elevenlabs(m, *ajustes_de_voz(), forzar)
+    voz, marcas = voz_elevenlabs(m, *ajustes_de_voz(), forzar)
     bucle = bucle_de_fondo(m, forzar) if m["fondo"] else None
-    return mezclar(voz, bucle, m["volumen_fondo"])
+    audio, duracion = mezclar(voz, bucle, m["volumen_fondo"])
+    retraso = ENTRADA if bucle else 0
+    return audio, duracion, {k: round(v + retraso, 1) for k, v in marcas.items()}
 
 
 def escuchar(meditaciones, forzar):
     cargar_env("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID")
     for m in meditaciones:
-        audio, duracion = producir(m, forzar)
+        audio, duracion, _ = producir(m, forzar)
         destino = ESCUCHA / m["usuario"] / f"{m['slug']}.mp3"
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_bytes(audio)
@@ -293,7 +301,7 @@ def publicar(meditaciones, forzar):
             supa.actualizar(id_usuario, m["slug"], datos)
             print(f"  sin cambios   {nombre}")
             continue
-        audio, duracion = producir(m, forzar)
+        audio, duracion, marcas = producir(m, forzar)
         ruta = f"{id_usuario}/{m['slug']}-{huella}.mp3"
         supa.subir_audio(ruta, audio)
         supa.guardar({
@@ -304,6 +312,7 @@ def publicar(meditaciones, forzar):
             "texto_hash": huella,
             "audio_ruta": ruta,
             "duracion_s": round(duracion),
+            "marcas": marcas,
         })
         if anterior and anterior["audio_ruta"] != ruta:
             supa.borrar_audio(anterior["audio_ruta"])

@@ -1,13 +1,35 @@
 :root {
-  --fondo: #faf8f3;
-  --panel: #f1ede4;
-  --panel-activo: #e2eee5;
-  --reproductor: #ffffff;
-  --texto: #3d4a46;
-  --tenue: #7f8c86;
-  --acento: #b5d8c1;
-  --acento-texto: #5a8a70;
+  --fondo: #f6f1e8;
+  --superficie: #fffdf8;
+  --superficie-2: #efe8db;
+  --texto: #2f3a37;
+  --tenue: #7b8580;
+  --linea: rgba(47, 58, 55, 0.08);
+  --acento: #4f7c68;
+  --sombra: 0 1px 2px rgba(47, 58, 55, 0.04), 0 8px 24px rgba(47, 58, 55, 0.06);
+  /* luminosidad y croma de los tonos de cada meditación */
+  --l-orbe: 0.80;
+  --c-orbe: 0.07;
+  --tono: 160; /* lo sustituye el de cada meditación */
+  --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #121a19;
+    --superficie: #1a2422;
+    --superficie-2: #22302d;
+    --texto: #e6e4dc;
+    --tenue: #8e9a95;
+    --linea: rgba(230, 228, 220, 0.07);
+    --acento: #9cc7b1;
+    --sombra: none;
+    --l-orbe: 0.62;
+    --c-orbe: 0.06;
+    color-scheme: dark;
+  }
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -16,102 +38,325 @@ html, body { margin: 0; background: var(--fondo); }
 
 body {
   color: var(--texto);
-  font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font: 17px/1.45 var(--sans);
   min-height: 100dvh;
-  padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(env(safe-area-inset-top) + 28px) 20px calc(env(safe-area-inset-bottom) + 32px);
+  -webkit-font-smoothing: antialiased;
 }
 
-body.con-reproductor { padding-bottom: calc(env(safe-area-inset-bottom) + 250px); }
+body.con-mini { padding-bottom: calc(env(safe-area-inset-bottom) + 110px); }
+body.con-reproductor { overflow: hidden; }
 
 [hidden] { display: none !important; }
 
-main { max-width: 560px; margin: 0 auto; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
 
-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+h1, h2, strong { font-weight: 500; }
 
-h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
-
-.lema { color: var(--tenue); font-size: 14px; margin: 0; }
-
-#estado { color: var(--tenue); font-size: 14px; margin: 12px 0 16px; min-height: 1.45em; }
-
-button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-
-#salir {
-  background: var(--panel);
-  color: var(--tenue);
-  border-radius: 999px;
-  padding: 0 16px;
-  min-height: 44px;
-  font-size: 14px;
+/* Orbes: el color de cada meditación sale de --tono (0–360), calculado a partir de su nombre. */
+.orbe-lista, .orbe-destacada, .orbe-mini, .orbe-marca {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, oklch(calc(var(--l-orbe) + 0.12) calc(var(--c-orbe) * 0.6) var(--tono)), transparent 60%),
+    radial-gradient(circle at 60% 70%, oklch(var(--l-orbe) var(--c-orbe) calc(var(--tono) + 40)), oklch(calc(var(--l-orbe) - 0.08) var(--c-orbe) var(--tono)));
+  flex: none;
 }
 
-#acceso { display: grid; gap: 14px; }
+/* --- Acceso --- */
+
+#acceso {
+  max-width: 380px;
+  margin: 0 auto;
+  min-height: calc(100dvh - 120px);
+  display: grid;
+  align-content: center;
+  gap: 16px;
+}
+.marca { text-align: center; margin-bottom: 24px; }
+.orbe-marca { display: block; width: 72px; height: 72px; margin: 0 auto 20px; animation: respirar 10s ease-in-out infinite; }
+.marca h1 { font: 500 40px/1.1 var(--serif); margin: 0; letter-spacing: -0.01em; }
+.marca p { color: var(--tenue); margin: 6px 0 0; }
 #acceso label { display: grid; gap: 6px; color: var(--tenue); font-size: 14px; }
 #acceso input {
   font: inherit;
   color: var(--texto);
-  background: var(--panel);
-  border: 1px solid var(--panel-activo);
-  border-radius: 12px;
-  padding: 12px 14px;
-  min-height: 48px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 14px;
+  padding: 12px 16px;
+  min-height: 52px;
   width: 100%;
 }
-#acceso input:focus { outline: 2px solid var(--acento-texto); outline-offset: 0; }
+#error-acceso { color: #b4553f; font-size: 14px; margin: 0; min-height: 1.45em; text-align: center; }
 #entrar {
-  background: var(--acento);
-  color: var(--texto);
-  font-weight: 600;
-  border-radius: 12px;
-  min-height: 48px;
-  margin-top: 6px;
+  background: var(--texto);
+  color: var(--fondo);
+  font-weight: 500;
+  border-radius: 999px;
+  min-height: 52px;
 }
-#entrar:disabled { opacity: 0.6; }
+#entrar:disabled { opacity: 0.5; }
 
-#lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+/* --- Inicio --- */
+
+main { max-width: 560px; margin: 0 auto; }
+
+main header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
+.momento { color: var(--tenue); font-size: 14px; margin: 0 0 2px; }
+#saludo { font: 500 32px/1.15 var(--serif); margin: 0; letter-spacing: -0.01em; }
+
+#salir { color: var(--tenue); font-size: 14px; min-height: 44px; padding: 0 4px; }
+
+#estado { color: var(--tenue); font-size: 14px; margin: 8px 0 16px; }
+#estado:empty { margin: 0 0 16px; }
+
+.destacada {
+  width: 100%;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 24px;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  color: #fbf8f1;
+  background: linear-gradient(160deg, oklch(0.52 0.06 var(--tono)), oklch(0.30 0.04 calc(var(--tono) + 30)));
+  box-shadow: var(--sombra);
+}
+.destacada .orbe-destacada {
+  position: absolute;
+  width: 220px; height: 220px;
+  top: -50px; right: -40px;
+  --l-orbe: 0.74; --c-orbe: 0.07;
+  opacity: 0.85;
+  animation: respirar 10s ease-in-out infinite;
+}
+.destacada > * { position: relative; }
+.destacada .etiqueta { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.75; }
+.destacada strong { font: 500 28px/1.15 var(--serif); }
+.destacada .desc { opacity: 0.8; font-size: 15px; }
+.destacada .pie { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 14px; opacity: 0.9; }
+.boton-play {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #fbf8f1;
+  display: grid; place-items: center;
+}
+.boton-play::before { content: ""; border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent oklch(0.35 0.05 var(--tono)); margin-left: 3px; }
+
+.seccion { font: 500 13px/1 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--tenue); margin: 36px 0 12px; }
+
+#lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 
 .meditacion {
   width: 100%;
   text-align: left;
-  background: var(--panel);
-  border-radius: 16px;
-  padding: 16px 18px;
-  display: grid;
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--linea);
 }
-.meditacion[aria-current="true"] { background: var(--panel-activo); outline: 1px solid var(--acento-texto); }
-.meditacion strong { font-weight: 600; font-size: 18px; }
-.meditacion span { color: var(--tenue); font-size: 15px; }
-.meditacion small { color: var(--acento-texto); font-size: 13px; }
+li:last-child .meditacion { border-bottom: 0; }
+.orbe-lista { width: 52px; height: 52px; }
+.meditacion[aria-current="true"] .orbe-lista { animation: respirar 10s ease-in-out infinite; }
+.meditacion .textos { display: grid; gap: 2px; min-width: 0; }
+.meditacion strong { font: 500 19px/1.25 var(--serif); }
+.meditacion .desc { color: var(--tenue); font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.meditacion small { color: var(--tenue); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.meditacion small .seguir { color: var(--acento); }
+.offline { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.7; }
+
+/* --- Mini reproductor --- */
+
+#mini {
+  position: fixed;
+  left: 12px; right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  max-width: 536px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 12px;
+  text-align: left;
+  border-radius: 22px;
+  background: var(--superficie);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--linea);
+}
+.orbe-mini { width: 40px; height: 40px; }
+.sonando .orbe-mini { animation: respirar 10s ease-in-out infinite; }
+.mini-texto { flex: 1; display: grid; min-width: 0; }
+.mini-texto strong { font: 500 16px/1.3 var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-texto small { color: var(--tenue); font-size: 13px; font-variant-numeric: tabular-nums; }
+.mini-play { width: 44px; height: 44px; border-radius: 50%; background: var(--superficie-2); display: grid; place-items: center; flex: none; }
+
+/* Iconos de reproducir y pausar, dibujados con CSS para no depender de fuentes. */
+.mini-play::before, .play::before {
+  content: "";
+  border-style: solid;
+  border-color: transparent transparent transparent currentColor;
+  border-width: 7px 0 7px 12px;
+  margin-left: 3px;
+}
+.sonando .mini-play::before, .sonando .play::before {
+  border-width: 0 4px;
+  border-color: currentColor;
+  width: 4px; height: 14px;
+  margin-left: 0;
+}
+
+/* --- Reproductor --- */
 
 #reproductor {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
-  background: var(--reproductor);
-  border-radius: 24px 24px 0 0;
-  padding: 20px 20px calc(env(safe-area-inset-bottom) + 20px);
-  box-shadow: 0 -8px 32px rgba(61, 74, 70, 0.12);
+  inset: 0;
+  z-index: 10;
+  color: #f1eee6;
+  background:
+    radial-gradient(120% 70% at 50% 38%, oklch(0.36 0.05 var(--tono)), transparent 70%),
+    linear-gradient(180deg, oklch(0.22 0.03 calc(var(--tono) + 20)), oklch(0.13 0.02 var(--tono)));
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  padding: calc(env(safe-area-inset-top) + 12px) 20px calc(env(safe-area-inset-bottom) + 24px);
+  animation: subir 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-#reproductor > * { max-width: 520px; margin-left: auto; margin-right: auto; }
-
-#titulo-actual { font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; text-align: center; }
-
-#progreso { display: block; width: 100%; accent-color: var(--acento-texto); height: 28px; }
-
-.tiempos {
-  display: flex;
-  justify-content: space-between;
-  color: var(--tenue);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+#reproductor::after {
+  /* Velo que oscurece la pantalla cuando los controles se ocultan. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 2.5s ease;
 }
+#reproductor.reposo::after { opacity: 0.55; }
 
-.controles { display: flex; justify-content: center; align-items: center; gap: 28px; margin-top: 8px; }
-.controles button {
-  width: 60px; height: 60px;
+.rep-cabecera, .rep-controles, .rep-info p, .play { transition: opacity 0.8s ease; }
+#reproductor.reposo .rep-cabecera,
+#reproductor.reposo .rep-controles,
+#reproductor.reposo .rep-info p,
+#reproductor.reposo .play { opacity: 0; }
+
+.rep-cabecera { display: flex; align-items: center; justify-content: space-between; max-width: 520px; width: 100%; margin: 0 auto; }
+.icono { width: 44px; height: 44px; display: grid; place-items: center; }
+.icono svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#tramo { font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; font-variant-numeric: tabular-nums; }
+
+.centro {
+  position: relative;
+  width: min(78vw, 340px, 42dvh);
+  aspect-ratio: 1;
+  place-self: center;
+  display: grid;
+  place-items: center;
+}
+#anillo { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+#anillo circle { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+#pistas circle { stroke: rgba(241, 238, 230, 0.16); }
+#rellenos circle { stroke: oklch(0.86 0.06 var(--tono)); transition: stroke-dasharray 0.4s linear; }
+
+.orbe {
+  position: absolute;
+  width: 62%;
+  aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--panel-activo);
-  font-size: 17px;
+  background:
+    radial-gradient(circle at 38% 32%, oklch(0.88 0.05 var(--tono)), transparent 58%),
+    radial-gradient(circle at 60% 70%, oklch(0.62 0.08 calc(var(--tono) + 40)), oklch(0.44 0.06 var(--tono)));
+  box-shadow: 0 0 80px 10px oklch(0.6 0.08 var(--tono) / 0.35);
+  animation: respirar 10s ease-in-out infinite;
+  animation-play-state: paused;
 }
-.controles .principal { width: 80px; height: 80px; background: var(--acento); color: var(--texto); font-size: 28px; }
+.sonando .orbe { animation-play-state: running; }
+
+.play {
+  position: relative;
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.play::before { border-width: 11px 0 11px 18px; margin-left: 5px; }
+.sonando .play::before { border-width: 0 6px; width: 6px; height: 22px; }
+
+.rep-info { text-align: center; max-width: 520px; width: 100%; margin: 0 auto 20px; position: relative; z-index: 1; }
+#titulo-actual { font: 500 28px/1.2 var(--serif); margin: 0; letter-spacing: -0.01em; }
+#restante { margin: 6px 0 0; opacity: 0.65; font-size: 15px; font-variant-numeric: tabular-nums; }
+
+.rep-controles { max-width: 520px; width: 100%; margin: 0 auto; }
+#progreso {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+#progreso::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: rgba(241, 238, 230, 0.2); }
+#progreso::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #f1eee6; margin-top: -5.5px; }
+#progreso::-moz-range-track { height: 3px; border-radius: 3px; background: rgba(241, 238, 230, 0.2); }
+#progreso::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #f1eee6; }
+.tiempos { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.55; font-variant-numeric: tabular-nums; }
+.botones { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; min-height: 52px; }
+.salto { width: 56px; height: 52px; border-radius: 999px; font-size: 15px; opacity: 0.8; font-variant-numeric: tabular-nums; }
+.al-cierre { padding: 0 20px; height: 44px; border-radius: 999px; border: 1px solid rgba(241, 238, 230, 0.3); font-size: 15px; }
+
+#final {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  padding: 24px;
+  background: inherit;
+  animation: aparecer 2.5s ease both;
+}
+.orbe-final { position: static; width: 120px; margin-bottom: 32px; animation-play-state: running; }
+.final-titulo { font: 500 30px/1.2 var(--serif); margin: 0; }
+.final-texto { opacity: 0.65; margin: 8px 0 40px; }
+#volver { padding: 0 28px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); animation: aparecer 1s ease 4s both; }
+
+/* --- Aviso --- */
+
+#aviso {
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top) + 12px);
+  transform: translateX(-50%);
+  z-index: 20;
+  margin: 0;
+  max-width: calc(100vw - 32px);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--texto);
+  color: var(--fondo);
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  animation: aparecer 0.3s ease;
+}
+
+/* Inspirar 4 s y espirar 6 s. */
+@keyframes respirar {
+  0%, 100% { transform: scale(0.86); }
+  40% { transform: scale(1); }
+}
+@keyframes subir { from { transform: translateY(6%); opacity: 0; } }
+@keyframes aparecer { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

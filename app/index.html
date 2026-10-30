@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#faf8f3">
+  <meta name="theme-color" content="#f6f1e8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121a19" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="T-med">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -13,39 +14,84 @@
   <title>T-med</title>
 </head>
 <body>
-  <main>
+  <form id="acceso" hidden>
+    <div class="marca">
+      <span class="orbe-marca" aria-hidden="true"></span>
+      <h1>T-med</h1>
+      <p>Meditaciones hechas para ti</p>
+    </div>
+    <label>Usuario
+      <input id="usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+    </label>
+    <label>Contraseña
+      <input id="clave" type="password" autocomplete="current-password" required>
+    </label>
+    <p id="error-acceso" role="alert"></p>
+    <button id="entrar">Entrar</button>
+  </form>
+
+  <main id="inicio" hidden>
     <header>
       <div>
-        <h1>T-med</h1>
-        <p class="lema">Tailored meditations</p>
+        <p id="momento" class="momento"></p>
+        <h1 id="saludo"></h1>
       </div>
-      <button id="salir" hidden>Salir</button>
+      <button id="salir">Salir</button>
     </header>
     <p id="estado" role="status"></p>
-
-    <form id="acceso" hidden>
-      <label>Usuario
-        <input id="usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
-      </label>
-      <label>Contraseña
-        <input id="clave" type="password" autocomplete="current-password" required>
-      </label>
-      <button id="entrar">Entrar</button>
-    </form>
-
+    <div id="destacada"></div>
+    <h2 id="titulo-lista" class="seccion" hidden>Todas</h2>
     <ul id="lista"></ul>
   </main>
 
+  <button id="mini" hidden aria-label="Abrir reproductor">
+    <span class="orbe-mini" aria-hidden="true"></span>
+    <span class="mini-texto"><strong id="mini-titulo"></strong><small id="mini-tiempo"></small></span>
+    <span id="mini-play" class="mini-play" role="button" aria-label="Reproducir"></span>
+  </button>
+
   <section id="reproductor" hidden aria-label="Reproductor">
-    <h2 id="titulo-actual"></h2>
-    <input id="progreso" type="range" min="0" max="100" value="0" step="1" aria-label="Posición">
-    <div class="tiempos"><span id="transcurrido">0:00</span><span id="restante">0:00</span></div>
-    <div class="controles">
-      <button id="atras" aria-label="Retroceder 15 segundos">−15</button>
-      <button id="play" class="principal" aria-label="Reproducir">▶</button>
-      <button id="adelante" aria-label="Avanzar 15 segundos">+15</button>
+    <div class="rep-cabecera">
+      <button id="cerrar" class="icono" aria-label="Cerrar reproductor">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <span id="tramo" aria-live="polite"></span>
+      <span class="icono" aria-hidden="true"></span>
+    </div>
+
+    <div class="centro">
+      <svg id="anillo" viewBox="0 0 200 200" aria-hidden="true">
+        <g id="pistas"></g>
+        <g id="rellenos"></g>
+      </svg>
+      <span class="orbe" aria-hidden="true"></span>
+      <button id="play" class="play" aria-label="Reproducir"></button>
+    </div>
+
+    <div class="rep-info">
+      <h2 id="titulo-actual"></h2>
+      <p id="restante"></p>
+    </div>
+
+    <div class="rep-controles">
+      <input id="progreso" type="range" min="0" max="100" value="0" step="1" aria-label="Posición">
+      <div class="tiempos"><span id="transcurrido">0:00</span><span id="total">0:00</span></div>
+      <div class="botones">
+        <button id="atras" class="salto" aria-label="Retroceder 15 segundos">−15</button>
+        <button id="al-cierre" class="al-cierre" hidden>Ir al cierre</button>
+        <button id="adelante" class="salto" aria-label="Avanzar 15 segundos">+15</button>
+      </div>
+    </div>
+
+    <div id="final" hidden>
+      <span class="orbe orbe-final" aria-hidden="true"></span>
+      <p class="final-titulo">Tómate un momento.</p>
+      <p class="final-texto">No hay prisa por volver.</p>
+      <button id="volver">Volver</button>
     </div>
   </section>
+
+  <p id="aviso" role="status" hidden></p>
 
   <audio id="audio" preload="metadata"></audio>
   <script src="config.js"></script>

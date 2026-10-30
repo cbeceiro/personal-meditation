@@ -58,6 +58,7 @@ La voz se genera párrafo a párrafo y se guarda en `.cache/`, así que al retoc
 - **Etiquetas de estilo**: `[softly]`, `[whispering]`, etc. Las interpreta el modelo de voz.
 - **Final**: todas las meditaciones acaban igual. Tras el último párrafo de la meditación suenan 4 minutos de solo fondo y después 1 minuto de cierre: la voz del cierre y el fondo, que se apaga al final. El cierre es el último párrafo del texto; si quieres que tenga varios, pon `[cierre]` en una línea propia delante del primero. Su voz, con sus pausas, tiene que acabar 12 s antes de que termine el cierre (48 s si dura 1 minuto).
 - **El título no se narra.** El fondo empieza 6 s antes que la voz.
+- **Tramos**: al publicar se guarda en qué segundo empiezan el silencio final y el cierre (columna `marcas`). La app los usa para el anillo de progreso y el botón «Ir al cierre». Las meditaciones publicadas antes de existir la columna usan los valores por defecto (4 min de silencio y 1 de cierre) hasta que se vuelvan a publicar. En una base creada antes: `alter table public.meditaciones add column if not exists marcas jsonb;`
 
 ### Cabecera
 

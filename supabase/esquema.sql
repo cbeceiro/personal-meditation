@@ -8,6 +8,7 @@ create table public.meditaciones (
   texto_hash text not null,
   audio_ruta text not null,
   duracion_s integer,
+  marcas jsonb, -- segundos en que empiezan el silencio final y el cierre: {"silencio": 300.5, "cierre": 540.5}
   orden integer not null default 0,
   publicado boolean not null default true,
   creado_en timestamptz not null default now(),
@@ -37,3 +38,6 @@ create policy "cada usuario lee sus audios de meditaciones"
     bucket_id = 'meditaciones-audio'
     and (storage.foldername(name))[1] = (select auth.uid())::text
   );
+
+-- Migración para bases creadas antes de existir la columna marcas:
+-- alter table public.meditaciones add column if not exists marcas jsonb;
