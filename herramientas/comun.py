@@ -67,7 +67,7 @@ class Supabase:
     # Meditaciones
 
     def publicadas(self, id_usuario):
-        params = {"select": "slug,texto_hash,audio_ruta", "user_id": f"eq.{id_usuario}"}
+        params = {"select": "slug,texto_hash,audio_ruta,marcas", "user_id": f"eq.{id_usuario}"}
         return {f["slug"]: f for f in self._pedir("GET", "/rest/v1/meditaciones", params=params).json()}
 
     def subir_audio(self, ruta, audio):

@@ -297,7 +297,8 @@ def publicar(meditaciones, forzar):
         )
         datos = {"titulo": m["titulo"], "descripcion": m["descripcion"], "orden": m["orden"]}
         anterior = publicadas[m["usuario"]].get(m["slug"])
-        if anterior and anterior["texto_hash"] == huella and not forzar:
+        # Las publicadas antes de guardar las marcas se vuelven a montar desde la caché, sin pedir nada nuevo.
+        if anterior and anterior["texto_hash"] == huella and anterior.get("marcas") and not forzar:
             supa.actualizar(id_usuario, m["slug"], datos)
             print(f"  sin cambios   {nombre}")
             continue
